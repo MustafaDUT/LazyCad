@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="7" fill="#0f141d" />
+  <!-- kedi kulaklı izometrik küp -->
+  <polygon points="7.5,9.5 8.6,3.2 13.6,6.6" fill="#e07f33" />
+  <polygon points="24.5,9.5 23.4,3.2 18.4,6.6" fill="#e07f33" />
+  <path d="M16 4.5 27.5 11v11L16 28.5 4.5 22V11L16 4.5Z" fill="#18202e" stroke="#26334a" stroke-width="1.1" />
+  <path d="M16 4.5 27.5 11 16 17.5 4.5 11 16 4.5Z" fill="#ffb454" />
+  <path d="M4.5 11 16 17.5v11L4.5 22V11Z" fill="#e07f33" />
+  <path d="M27.5 11 16 17.5v11l11.5-6.5V11Z" fill="#9c5a22" />
+  <path d="M10 8.2l11.5 6.5M16 4.5v13" stroke="#101826" stroke-width="0.8" opacity="0.5" />
+</svg>

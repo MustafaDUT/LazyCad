@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440" role="img" aria-label="Lazy CAD maskotu: küplerle oynayan tembel kedi">
+  <style>
+    .tail { animation: tail 3.4s ease-in-out infinite; transform-box: fill-box; transform-origin: 88% 88%; }
+    @keyframes tail { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(-8deg); } }
+
+    .paw { animation: pat 4s ease-in-out infinite; transform-box: fill-box; transform-origin: 6% 70%; }
+    @keyframes pat { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(1.8deg); } }
+
+    .m-cube { animation: hovercube 4.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+    @keyframes hovercube { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-13px) rotate(2.4deg); } }
+
+    .spark { animation: twinkle 2.3s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+    .s2 { animation-delay: .45s; } .s3 { animation-delay: .9s; } .s4 { animation-delay: 1.35s; }
+    @keyframes twinkle { 0%,100% { opacity: .12; transform: scale(.55); } 50% { opacity: 1; transform: scale(1); } }
+
+    .z1 { animation: zfloat 3.8s ease-in-out infinite; }
+    .z2 { animation: zfloat 3.8s ease-in-out .8s infinite; }
+    .z3 { animation: zfloat 3.8s ease-in-out 1.6s infinite; }
+    @keyframes zfloat { 0% { opacity: 0; transform: translateY(8px); } 35% { opacity: 1; } 100% { opacity: 0; transform: translateY(-18px); } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tail, .paw, .m-cube, .spark, .z1, .z2, .z3 { animation: none; }
+    }
+  </style>
+
+  <!-- sahne zemini -->
+  <circle cx="360" cy="218" r="200" fill="#141d2b" stroke="#26334a" stroke-width="2" />
+  <circle cx="360" cy="218" r="170" fill="none" stroke="#1d2839" stroke-width="1.5" stroke-dasharray="2 7" />
+
+  <!-- izometrik ızgara -->
+  <g stroke="#31415c" stroke-width="2" stroke-dasharray="5 6" fill="none" opacity="0.65">
+    <path d="M 340 368 L 505 438 L 670 368" />
+    <path d="M 505 296 L 505 438" />
+  </g>
+
+  <!-- kedinin gölgesi -->
+  <ellipse cx="245" cy="398" rx="138" ry="15" fill="#0a0e15" opacity="0.45" />
+
+  <!-- bitmiş küpler: kedinin tembelce ürettiği işler -->
+  <g>
+    <!-- amber küp -->
+    <path d="M 452 330 L 496 352 L 452 374 L 408 352 Z" fill="#ffb454" />
+    <path d="M 408 352 L 452 374 L 452 410 L 408 388 Z" fill="#e07f33" />
+    <path d="M 496 352 L 496 388 L 452 410 L 452 374 Z" fill="#9c5a22" />
+    <!-- gök küp -->
+    <path d="M 540 330 L 584 352 L 540 374 L 496 352 Z" fill="#4cc9f0" />
+    <path d="M 496 352 L 540 374 L 540 410 L 496 388 Z" fill="#2f9dc4" />
+    <path d="M 584 352 L 584 388 L 540 410 L 540 374 Z" fill="#1e6f8f" />
+    <!-- mor küp (üste yığılmış) -->
+    <path d="M 496 294 L 540 316 L 496 338 L 452 316 Z" fill="#9d7bff" />
+    <path d="M 452 316 L 496 338 L 496 374 L 452 352 Z" fill="#7c5fd3" />
+    <path d="M 540 316 L 540 352 L 496 374 L 496 338 Z" fill="#5d46a3" />
+  </g>
+
+  <!-- TEMBEL KEDİ -->
+  <!-- kuyruk -->
+  <path class="tail" d="M 130 342 Q 78 350 84 296 Q 88 258 116 270" stroke="#f97316" stroke-width="22" stroke-linecap="round" fill="none" />
+  <!-- gövde -->
+  <ellipse cx="225" cy="330" rx="92" ry="58" fill="#f97316" transform="rotate(-8 225 330)" />
+  <ellipse cx="240" cy="345" rx="50" ry="28" fill="#fdba74" opacity="0.3" transform="rotate(-8 240 345)" />
+  <!-- arka pati kıvrımı -->
+  <path d="M 168 362 Q 196 380 224 366" stroke="#ea580c" stroke-width="10" stroke-linecap="round" fill="none" opacity="0.75" />
+
+  <!-- kafa -->
+  <circle cx="298" cy="252" r="52" fill="#f97316" />
+  <!-- kulaklar -->
+  <polygon points="254,222 268,176 296,204" fill="#ea580c" />
+  <polygon points="342,222 328,176 300,204" fill="#ea580c" />
+  <polygon points="263,215 271,189 288,205" fill="#fdba74" opacity="0.65" />
+  <polygon points="333,215 325,189 308,205" fill="#fdba74" opacity="0.65" />
+  <!-- uykulu mutlu gözler -->
+  <path d="M 272 252 Q 282 262 292 252" stroke="#7c2d12" stroke-width="4" stroke-linecap="round" fill="none" />
+  <path d="M 306 252 Q 316 262 326 252" stroke="#7c2d12" stroke-width="4" stroke-linecap="round" fill="none" />
+  <!-- burun + ağız -->
+  <polygon points="295,266 305,266 300,273" fill="#f43f5e" />
+  <path d="M 300 273 Q 295 280 288 277" stroke="#7c2d12" stroke-width="2.5" stroke-linecap="round" fill="none" />
+  <path d="M 300 273 Q 305 280 312 277" stroke="#7c2d12" stroke-width="2.5" stroke-linecap="round" fill="none" />
+  <!-- bıyıklar -->
+  <g stroke="#7c2d12" stroke-width="2" stroke-linecap="round" opacity="0.5">
+    <path d="M 258 262 L 226 255" />
+    <path d="M 258 272 L 228 275" />
+    <path d="M 338 262 L 370 255" />
+    <path d="M 338 272 L 368 275" />
+  </g>
+
+  <!-- uzanan pati — havadaki küpü şekillendiriyor -->
+  <g class="paw">
+    <path d="M 316 298 Q 420 282 552 232" stroke="#f97316" stroke-width="21" stroke-linecap="round" fill="none" />
+    <circle cx="555" cy="230" r="10.5" fill="#fff" />
+  </g>
+
+  <!-- HAVADAKİ SİHİRLİ KÜP -->
+  <g class="m-cube">
+    <path d="M 628 168 L 674 191 L 628 214 L 582 191 Z" fill="#3fd6b6" opacity="0.92" />
+    <path d="M 582 191 L 628 214 L 628 252 L 582 229 Z" fill="#2aa88e" opacity="0.92" />
+    <path d="M 674 191 L 674 229 L 628 252 L 628 214 Z" fill="#1d7a67" opacity="0.92" />
+  </g>
+  <!-- parıltılar -->
+  <circle class="spark" cx="628" cy="140" r="4" fill="#a7f3d0" />
+  <circle class="spark s2" cx="698" cy="196" r="3" fill="#a7f3d0" />
+  <circle class="spark s3" cx="566" cy="224" r="3" fill="#a7f3d0" />
+  <circle class="spark s4" cx="664" cy="152" r="2.5" fill="#ffb454" />
+
+  <!-- Zzz -->
+  <g font-family="'IBM Plex Mono', monospace" font-weight="600">
+    <g class="z1" transform="rotate(-12 208 190)"><text x="208" y="190" font-size="26" fill="#8da0ba">Z</text></g>
+    <g class="z2" transform="rotate(-12 176 158)"><text x="176" y="158" font-size="34" fill="#6e82a0">Z</text></g>
+    <g class="z3" transform="rotate(-12 138 118)"><text x="138" y="118" font-size="46" fill="#5c6f8a">Z</text></g>
+  </g>
+</svg>
