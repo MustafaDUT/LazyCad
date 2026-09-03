@@ -77,9 +77,19 @@ npm run typecheck  # TypeScript check
 npm run build      # production build → dist/ (static, host anywhere)
 ```
 
+Or run the built app in a container:
+
+```bash
+docker build -t lazycad .
+docker run -p 8080:80 lazycad   # → http://localhost:8080
+```
+
 ## 📁 Structure
 
 ```
+Dockerfile              # multi-stage build → nginx static serving
+nginx.conf              # gzip + SPA fallback + asset caching
+.dockerignore
 src/
 ├── three/EditorScene.ts   # the engine: grid, planes, layers, mini 3D, bed, STL-ready rendering
 ├── lib/

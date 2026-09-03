@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v1.1.0 — 2026-09-02 · Docker dağıtımı
+- `Dockerfile` eklendi: çok aşamalı build — `node` ile statik `dist/` üretilir, `nginx` ile sunulur
+- Tek komut: `docker build -t lazycad . && docker run -p 8080:80 lazycad`
+- `nginx.conf`: gzip + SPA fallback (`index.html`) + hashlı asset önbelleği (`/assets/`)
+- `.dockerignore` (node_modules/dist/.git/ortam dosyaları image'a girmez)
+
 ## v1.0.0 — 2026-09-02 · İlk genel sürüm
 
 Katman katman voxel stüdyosunun **ilk genel sürümü** — kendine yeten, tamamen tarayıcıda çalışır:

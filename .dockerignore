@@ -1,0 +1,13 @@
+# bağımlılıklar ve build çıktısı — image içine girmesin
+node_modules
+dist
+
+# git ve yerel dosyalar
+.git
+.gitignore
+.DS_Store
+
+# ortam / log / sır
+.env
+.env.*
+*.log

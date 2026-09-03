@@ -1,0 +1,10 @@
+# Lazy CAD — statik siteyi tek konteynerde yayınlar
+# Kullanım: docker compose up -d   →   http://localhost:8080
+services:
+  web:
+    build: .
+    image: lazycad
+    container_name: lazycad
+    ports:
+      - "8080:80"
+    restart: unless-stopped
