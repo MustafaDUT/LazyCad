@@ -4,7 +4,7 @@ import { PALETTE, STAMPS, type PrintAnalysis, type PrintEstimate, formatVolume, 
 import {
   LogoMark, IconGrid, IconCube, IconUndo, IconRedo, IconTrash, IconExport, IconImport,
   IconWarn, IconPrinter, IconX, IconCheck, IconPaint, IconEraser, IconPick, IconBucket,
-  IconRect, IconCircle, IconStamp, IconSelect, IconFit, IconRotate, IconEye, IconCopy,
+  IconRect, IconCircle, IconStamp, IconSelect, IconRuler, IconFit, IconRotate, IconEye, IconCopy,
   IconPaste, IconTarget, IconMirror, IconKeyboard, IconCamera, IconFolder, IconLayers, IconSupport,
   IconSmooth, IconUser,
 } from "./icons";
@@ -50,10 +50,11 @@ const HINTS: Record<string, string> = {
   "2d-circle": "Sürükle: merkezden daire çiz",
   "2d-stamp": "Izgaraya tıkla: seçili kalıbı bas",
   "2d-select": "Sürükle: bölge seç · tıkla: taşı · Alt+sürükle: kopyala · Esc: geri koy",
+  "2d-ruler": "1. KP'ye tıkla → 2. KP'ye tıkla: mesafe · 3. tık yeni ölçüm · sağ tık/Esc: temizle",
   "3d-any": "Sürükle: döndür · sağ tık: kaydır · tekerlek: yakınlaş · boyama 2D modda",
 };
 
-export function Hud({ mode, tool, stats, hud }: { mode: ViewMode; tool: Tool; stats: EngineStats; hud: MutableRefObject<HudBus> }) {
+export function Hud({ mode, tool, stats, measure, hud }: { mode: ViewMode; tool: Tool; stats: EngineStats; measure: string | null; hud: MutableRefObject<HudBus> }) {
   const hint = mode === "3d" ? HINTS["3d-any"] : HINTS[`2d-${tool}`];
   return (
     <footer className="flex h-9 shrink-0 items-center gap-4 overflow-hidden border-t border-line-soft bg-ink-900/95 px-4 font-mono text-[11px] text-mist">
@@ -61,6 +62,12 @@ export function Hud({ mode, tool, stats, hud }: { mode: ViewMode; tool: Tool; st
         <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${mode === "2d" ? "bg-amber" : "bg-mint"}`} />
         {hint}
       </span>
+      {measure && (
+        <span className="inline-flex min-w-0 items-center gap-1.5 rounded-md border border-amber/40 bg-amber/10 px-2 py-px font-medium text-amber">
+          <span>📏</span>
+          <span className="truncate">{measure}</span>
+        </span>
+      )}
       <span className="flex items-center gap-3 lg:ml-auto">
         <span ref={(el) => void (hud.current.cursorEl = el)} className="min-w-[100px] text-paper">— · —</span>
         <span ref={(el) => void (hud.current.fillEl = el)} className="w-12 text-faint">·</span>
@@ -335,6 +342,7 @@ const TOOLS: { t: Tool; label: string; k: string; icon: ReactNode }[] = [
   { t: "circle", label: "Daire", k: "C", icon: <IconCircle size={15} /> },
   { t: "stamp", label: "Damga", k: "S", icon: <IconStamp size={15} /> },
   { t: "select", label: "Seç", k: "A", icon: <IconSelect size={15} /> },
+  { t: "ruler", label: "Çetvel", k: "L", icon: <IconRuler size={15} /> },
 ];
 
 function StampPreview({ art, active }: { art: string[]; active: boolean }) {
@@ -912,7 +920,7 @@ const GROUPS: { title: string; rows: [string, string][] }[] = [
     rows: [
       ["B", "Boya"], ["E", "Sil"], ["F", "Kova (bölge doldur)"], ["P", "Pipet"],
       ["R", "Dikdörtgen"], ["C", "Daire"], ["S", "Damga"], ["A", "Seçim (taşı / kopyala)"],
-      ["1–9, 0", "Palet rengi seç"],
+      ["L", "Çetvel (mesafe ölç)"], ["1–9, 0", "Palet rengi seç"],
     ],
   },
   {
@@ -920,7 +928,7 @@ const GROUPS: { title: string; rows: [string, string][] }[] = [
     rows: [
       ["W / PageUp", "Üst dilim"], ["Q / PageDown", "Alt dilim"],
       ["X", "Dikey simetri"], ["Y", "Yatay simetri"],
-      ["Esc", "Seçimi geri koy"], ["Alt + sürükle", "Seçimi kopyala"],
+      ["Esc", "Seçimi / çetvel ölçümünü temizle"], ["Alt + sürükle", "Seçimi kopyala"],
     ],
   },
   {

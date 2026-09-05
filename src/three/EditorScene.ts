@@ -4,7 +4,7 @@ import { PALETTE } from "../lib/model";
 import { keyOf, decodeKey, inRange, bresenham, computeBBox, stampOffsets, STAMPS } from "../lib/model";
 import { buildSmoothMesh } from "../lib/smooth";
 
-export type Tool = "paint" | "erase" | "pick" | "fill" | "rect" | "circle" | "stamp" | "select";
+export type Tool = "paint" | "erase" | "pick" | "fill" | "rect" | "circle" | "stamp" | "select" | "ruler";
 export type ViewMode = "2d" | "3d";
 export type DrawPlane = "xy" | "xz" | "yz";
 
@@ -25,6 +25,13 @@ export interface EngineStats {
   slice: number;
 }
 
+export interface RulerResult {
+  count: number; // seçim dahil küp sayısı
+  mm: number; // dıştan dışa span (count × kpSizeMm)
+  kp: number; // kullanılan küp aralığı (mm)
+  label: string; // hazır görünen metin: "5 küp · 50 mm"
+}
+
 export interface EngineCallbacks {
   onStats: (s: EngineStats) => void;
   onCursor: (cell: [number, number] | null, filled: boolean) => void;
@@ -34,6 +41,7 @@ export interface EngineCallbacks {
   onToast: (msg: string) => void;
   onMiniLayout: (r: { x: number; y: number; w: number; h: number } | null) => void;
   onMiniMaximize: () => void;
+  onMeasure: (r: RulerResult | null) => void;
 }
 
 const BASE_S = 26;
@@ -146,6 +154,17 @@ export class EditorScene {
   private selPreview: THREE.InstancedMesh | null = null;
   private selPreviewCap = 0;
   private selPreviewMat: THREE.MeshBasicMaterial;
+
+  // çetvel (ölçüm) aracı
+  private rulerStart: [number, number, number] | null = null;
+  private rulerEnd: [number, number, number] | null = null;
+  private rulerActive = false;
+  private rulerSegs: THREE.LineSegments;
+  private rulerPos: Float32Array;
+  private rulerSprite: THREE.Sprite | null = null;
+  private rulerTex: THREE.CanvasTexture | null = null;
+  private rulerMid: [number, number] | null = null;
+  private rulerPx: [number, number] = [0, 0];
 
   // mini 3D önizleme
   private miniEnabled = true;
@@ -317,6 +336,19 @@ export class EditorScene {
     this.selRect.visible = false;
     this.scene.add(this.selRect);
     this.selPreviewMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5, depthWrite: false });
+
+    // çetvel çizgisi + uç artıları
+    this.rulerPos = new Float32Array(64 * 3);
+    const rulerGeo = new THREE.BufferGeometry();
+    rulerGeo.setAttribute("position", new THREE.BufferAttribute(this.rulerPos, 3).setUsage(THREE.DynamicDrawUsage));
+    rulerGeo.setDrawRange(0, 0);
+    this.rulerSegs = new THREE.LineSegments(
+      rulerGeo,
+      new THREE.LineBasicMaterial({ color: 0xffb454, transparent: true, opacity: 0.95 }),
+    );
+    this.rulerSegs.frustumCulled = false;
+    this.rulerSegs.visible = false;
+    this.scene.add(this.rulerSegs);
 
     // mini kamera
     this.miniCam = new THREE.PerspectiveCamera(38, 16 / 10, 0.1, 4000);
@@ -570,6 +602,7 @@ export class EditorScene {
 
   setPlane(p: DrawPlane) {
     if (this.plane === p) return;
+    if (this.rulerStart || this.rulerEnd) this.clearRuler();
     this.finalizeStroke(false);
     const from = this.plane;
 
@@ -631,8 +664,10 @@ export class EditorScene {
   /* ---------------- araçlar ---------------- */
 
   setTool(t: Tool) {
+    const leaveRuler = this.tool === "ruler" && t !== "ruler";
     this.tool = t;
     this.finalizeStroke(false);
+    if (leaveRuler) this.clearRuler();
     this.updateGhostColor();
     this.refreshCursor();
   }
@@ -1219,6 +1254,139 @@ export class EditorScene {
     return this.selCells !== null && this.selCells.size > 0;
   }
 
+  /* ---------------- çetvel (ölçüm) ---------------- */
+
+  private rulerClick(cell: [number, number]) {
+    const w = this.toWorld(cell[0], cell[1]);
+    if (!this.rulerStart) {
+      this.rulerStart = w;
+      this.rulerEnd = null;
+    } else if (!this.rulerEnd) {
+      this.rulerEnd = w;
+    } else {
+      // üçüncü tıklama → yeni ölçüm başlat
+      this.rulerStart = w;
+      this.rulerEnd = null;
+    }
+    this.updateRuler();
+  }
+
+  clearRuler() {
+    if (!this.rulerStart && !this.rulerEnd) return;
+    this.rulerStart = null;
+    this.rulerEnd = null;
+    this.rulerActive = false;
+    this.rulerMid = null;
+    if (this.rulerSprite) this.rulerSprite.visible = false;
+    this.cb.onMeasure(null);
+    this.applyRulerModeVis();
+  }
+
+  /** Overlay'i (uç artıları + doğru) yeniden çizer, ölçümü yayınlar. */
+  private updateRuler() {
+    const Z = 0.08;
+    const P = this.rulerPos;
+    let n = 0;
+    const put = (x: number, y: number) => {
+      P[n * 3] = x;
+      P[n * 3 + 1] = y;
+      P[n * 3 + 2] = Z;
+      n++;
+    };
+    const cv = (w: [number, number, number]): [number, number] => {
+      const s = this.toScreen(w[0], w[1], w[2]);
+      return [s[0] + 0.5, s[1] + 0.5];
+    };
+    const cross = (u: number, v: number) => {
+      const c = 0.32;
+      put(u - c, v);
+      put(u + c, v);
+      put(u, v - c);
+      put(u, v + c);
+    };
+    const a = this.rulerStart ? cv(this.rulerStart) : null;
+    const b = this.rulerEnd ? cv(this.rulerEnd) : null;
+    if (a) cross(a[0], a[1]);
+    if (a && b) {
+      put(a[0], a[1]);
+      put(b[0], b[1]);
+    }
+    if (b) cross(b[0], b[1]);
+    (this.rulerSegs.geometry.getAttribute("position") as THREE.BufferAttribute).needsUpdate = true;
+    this.rulerSegs.geometry.setDrawRange(0, n);
+
+    this.rulerActive = !!this.rulerStart;
+    if (a && b && this.rulerStart && this.rulerEnd) {
+      const [i0, j0, k0] = this.rulerStart;
+      const [i1, j1, k1] = this.rulerEnd;
+      const count = Math.max(Math.abs(i1 - i0), Math.abs(j1 - j0), Math.abs(k1 - k0)) + 1;
+      const mm = count * this.kpSizeMm;
+      const mmStr = mm.toLocaleString("tr-TR", { maximumFractionDigits: 2 });
+      this.cb.onMeasure({ count, mm, kp: this.kpSizeMm, label: `${count} küp · ${mmStr} mm` });
+      this.rulerMid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+      this.buildRulerSprite(`${count} küp · ${mmStr} mm`);
+    } else {
+      this.rulerMid = null;
+      this.cb.onMeasure(null);
+      if (this.rulerSprite) this.rulerSprite.visible = false;
+    }
+    this.applyRulerModeVis();
+  }
+
+  /** Tuval üzerinde küçük etiket (sprite) oluştur / güncelle. */
+  private buildRulerSprite(text: string) {
+    const font = "600 14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
+    const c = document.createElement("canvas");
+    const g = c.getContext("2d");
+    if (!g) return;
+    g.font = font;
+    const tw = g.measureText(text).width;
+    const padX = 12;
+    c.width = Math.ceil(tw + padX * 2);
+    c.height = 34;
+    const w = c.width;
+    const h = c.height;
+    const r = 8;
+    g.textBaseline = "middle";
+    g.font = font;
+    g.beginPath();
+    g.moveTo(r, 0);
+    g.arcTo(w, 0, w, h, r);
+    g.arcTo(w, h, 0, h, r);
+    g.arcTo(0, h, 0, 0, r);
+    g.arcTo(0, 0, w, 0, r);
+    g.closePath();
+    g.fillStyle = "rgba(13, 18, 28, 0.92)";
+    g.fill();
+    g.lineWidth = 1.5;
+    g.strokeStyle = "#ffb454";
+    g.stroke();
+    g.fillStyle = "#ffcf7a";
+    g.fillText(text, padX, h / 2 + 0.5);
+    if (!this.rulerSprite) {
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      this.rulerTex = tex;
+      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false });
+      this.rulerSprite = new THREE.Sprite(mat);
+      this.rulerSprite.renderOrder = 40;
+      this.rulerSprite.frustumCulled = false;
+      this.rulerSprite.visible = false;
+      this.scene.add(this.rulerSprite);
+    } else if (this.rulerTex) {
+      this.rulerTex.image = c;
+      this.rulerTex.needsUpdate = true;
+    }
+    this.rulerPx = [c.width, c.height];
+  }
+
+  /** Mod değişince overlay görünürlüğünü senkronla (yalnızca 2D; sprite çift uç varken). */
+  private applyRulerModeVis() {
+    const vis = this.mode === "2d" && this.rulerActive;
+    this.rulerSegs.visible = vis;
+    if (this.rulerSprite) this.rulerSprite.visible = vis && this.rulerMid !== null;
+  }
+
   /* ---------------- geri al / yinele ---------------- */
 
   undo() {
@@ -1491,6 +1659,7 @@ export class EditorScene {
     this.applySmoothVisibility();
     this.builtVersion = -1;
     this.miniBuiltVersion = -1;
+    this.applyRulerModeVis();
     this.refreshCursor();
     this.emitMiniLayout();
   }
@@ -1573,6 +1742,12 @@ export class EditorScene {
     }
 
     if (e.button === 1 || e.button === 2 || this.spaceHeld) {
+      if (this.tool === "ruler" && e.button === 2 && !this.spaceHeld) {
+        // çetvel: sağ tık → ölçümü temizle (silme değil)
+        this.clearRuler();
+        this.refreshCursor();
+        return;
+      }
       if (e.button === 2 && !this.spaceHeld && !this.hasSelection()) {
         const cell = this.cellFromEvent(e);
         if (cell) {
@@ -1596,6 +1771,12 @@ export class EditorScene {
     if (e.button !== 0) return;
     const cell = this.cellFromEvent(e);
     if (!cell) return;
+
+    if (this.tool === "ruler") {
+      this.rulerClick(cell);
+      this.refreshCursor();
+      return;
+    }
 
     if (this.tool === "pick") {
       const pk = this.keyAt(cell[0], cell[1]);
@@ -1841,7 +2022,10 @@ export class EditorScene {
       e.preventDefault();
     }
     if (e.key === "Alt") this.altHeld = true;
-    if (e.key === "Escape" && this.hasSelection()) this.cancelSelection();
+    if (e.key === "Escape") {
+      if (this.hasSelection()) this.cancelSelection();
+      else this.clearRuler();
+    }
   };
 
   private onKeyUp = (e: KeyboardEvent) => {
@@ -2428,6 +2612,12 @@ export class EditorScene {
       this.ortho.zoom = this.s;
       this.ortho.position.set(this.cx, this.cy, 20);
       this.ortho.updateProjectionMatrix();
+      // çetvel etiketi: sabit piksel boyutu + orta noktanın üstünde kalsın
+      if (this.rulerSprite && this.rulerSprite.visible && this.rulerMid) {
+        const k = 1 / this.s;
+        this.rulerSprite.scale.set(this.rulerPx[0] * k, this.rulerPx[1] * k, 1);
+        this.rulerSprite.position.set(this.rulerMid[0], this.rulerMid[1] + 22 * k, 0.2);
+      }
       this.rebuildGrid();
       this.rebuildAxisLines();
       this.syncInstances();
@@ -2483,6 +2673,7 @@ export class EditorScene {
       if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
       else if (mat) mat.dispose();
     });
+    if (this.rulerTex) this.rulerTex.dispose();
     this.renderer.dispose();
     canvas.remove();
   }

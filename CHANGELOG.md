@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## v1.2.0 — 2026-09-05 · Çetvel (ölçüm) aracı
+- Yeni **Çetvel (L)** aracı: iki hücreye tıklayınca aralarındaki doğrudan mesafeyi gösterir
+- Ölçüm iki yönüyle verilir: **küp sayısı** (uçlar dahil) + **mm** (dıştan dışa span = küp sayısı × küp aralığı)
+- Tuval üzerinde çizgi + uç artıları + orta noktada sabit boyutlu etiket; alt çubukta 📏 özet çipi
+- Dolu/boş fark etmeksizin her hücre ölçülebilir; farklı K katmanlarına tıklayarak yükseklik de ölçülür
+- 3. tıklama yeni ölçüm başlatır · sağ tık / Esc / araç değiştirince temizlenir · ölçüm kaydedilmez
+
 ## v1.1.0 — 2026-09-02 · Docker dağıtımı
 - `Dockerfile` eklendi: çok aşamalı build — `node` ile statik `dist/` üretilir, `nginx` ile sunulur
 - Tek komut: `docker build -t lazycad . && docker run -p 8080:80 lazycad`

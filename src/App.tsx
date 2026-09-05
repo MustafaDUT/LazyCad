@@ -71,6 +71,7 @@ export default function App() {
   const [colorIdx, setColorIdx] = useState(0);
   const [autoRotate, setAutoRotate] = useState(false);
   const [stats, setStats] = useState<EngineStats>(EMPTY_STATS);
+  const [measure, setMeasure] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [plane, setPlane] = useState<DrawPlane>("xy");
   const [miniRect, setMiniRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
@@ -198,7 +199,9 @@ export default function App() {
         eng.setMode("3d");
         eng.setAutoRotate(autoRotateRef.current);
       },
+      onMeasure: (r) => setMeasure(r ? r.label : null),
     });
+    setMeasure(null); // yeni sahne: eski ölçüm kalmasın
     engineRef.current = eng;
     eng.setGhostDepth(prefsInit.current.ghostDepth);
     eng.setGhostOpacity(prefsInit.current.ghostOpacity);
@@ -238,6 +241,7 @@ export default function App() {
       else if (k === "c") setToolBoth("circle");
       else if (k === "s") setToolBoth("stamp");
       else if (k === "a") setToolBoth("select");
+      else if (k === "l") setToolBoth("ruler");
       else if (k === "m" && eng.getMode() === "3d") setSmoothOn((v) => !v);
       else if (k === "v") setMiniOn((v) => !v);
       else if (k === "x") toggleSymX();
@@ -1018,7 +1022,7 @@ export default function App() {
         </div>
       </div>
 
-      <Hud mode={mode} tool={tool} stats={stats} hud={hudRef} />
+      <Hud mode={mode} tool={tool} stats={stats} measure={measure} hud={hudRef} />
       <Toasts items={toasts} />
       {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
     </div>
