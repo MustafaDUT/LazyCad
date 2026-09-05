@@ -1363,20 +1363,26 @@ export class EditorScene {
     g.stroke();
     g.fillStyle = "#ffcf7a";
     g.fillText(text, padX, h / 2 + 0.5);
-    if (!this.rulerSprite) {
-      const tex = new THREE.CanvasTexture(c);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      this.rulerTex = tex;
-      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false });
-      this.rulerSprite = new THREE.Sprite(mat);
-      this.rulerSprite.renderOrder = 40;
-      this.rulerSprite.frustumCulled = false;
-      this.rulerSprite.visible = false;
-      this.scene.add(this.rulerSprite);
-    } else if (this.rulerTex) {
-      this.rulerTex.image = c;
-      this.rulerTex.needsUpdate = true;
+
+    // Etiketi her seferinde yeniden üret: eski sprite/doku GPU'dan tamamen atılır,
+    // böylece kısa ölçümlerde önceki (daha geniş) etiketin kırıntısı kalmaz.
+    if (this.rulerSprite) {
+      this.scene.remove(this.rulerSprite);
+      const m = this.rulerSprite.material as THREE.SpriteMaterial;
+      if (m.map) m.map.dispose();
+      m.dispose();
+      this.rulerSprite = null;
+      this.rulerTex = null;
     }
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    this.rulerTex = tex;
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false });
+    this.rulerSprite = new THREE.Sprite(mat);
+    this.rulerSprite.renderOrder = 40;
+    this.rulerSprite.frustumCulled = false;
+    this.rulerSprite.visible = false;
+    this.scene.add(this.rulerSprite);
     this.rulerPx = [c.width, c.height];
   }
 
@@ -2308,6 +2314,8 @@ export class EditorScene {
       selPrev: this.selPreview?.visible ?? false,
       axis: this.axisLines.visible,
       bed: this.bed.visible,
+      rulerSeg: this.rulerSegs.visible,
+      rulerSpr: this.rulerSprite?.visible ?? false,
     };
     this.gridLines.visible = false;
     this.ghost.visible = false;
@@ -2317,6 +2325,8 @@ export class EditorScene {
     this.selRect.visible = false;
     if (this.selPreview) this.selPreview.visible = false;
     this.axisLines.visible = false;
+    this.rulerSegs.visible = false;
+    if (this.rulerSprite) this.rulerSprite.visible = false;
     this.bed.visible = false;
     this.triad.visible = true;
     this.miniMesh.visible = true;
@@ -2338,6 +2348,8 @@ export class EditorScene {
     if (this.selPreview) this.selPreview.visible = saved.selPrev;
     this.axisLines.visible = saved.axis;
     this.bed.visible = saved.bed;
+    this.rulerSegs.visible = saved.rulerSeg;
+    if (this.rulerSprite) this.rulerSprite.visible = saved.rulerSpr;
     this.triad.visible = false;
     this.miniMesh.visible = false;
   }

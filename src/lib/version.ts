@@ -5,4 +5,4 @@
  *   PATCH  hata düzeltmesi / cila
  * Local git etiketleri bu değeri takip eder: git tag v1.1.0
  */
-export const APP_VERSION = "1.2.0";
+export const APP_VERSION = "1.2.1";

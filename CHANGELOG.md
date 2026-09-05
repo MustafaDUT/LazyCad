@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v1.2.1 — 2026-09-05 · Çetvel etiketi kopyası düzeltmesi
+- Kısa ölçümlerde etiketin arkasında görünen eski kart kopyası giderildi
+  - Çetvel overlay'i (çizgi + uç artıları + etiket) artık mini 3D ön-izleme pasında gizleniyor — ikinci kamerayla (aynı sahne) etiketin bir kopyası daha çizilmiyor
+  - Etiket dokusu her ölçümde GPU'dan tamamen atılıp yeniden üretiliyor — önceki daha geniş etiketin kırıntısı kalmıyor
+
 ## v1.2.0 — 2026-09-05 · Çetvel (ölçüm) aracı
 - Yeni **Çetvel (L)** aracı: iki hücreye tıklayınca aralarındaki doğrudan mesafeyi gösterir
 - Ölçüm iki yönüyle verilir: **küp sayısı** (uçlar dahil) + **mm** (dıştan dışa span = küp sayısı × küp aralığı)
